@@ -1,0 +1,5 @@
+{
+  "name": "Podcast Scheduler Pro",
+  "description": "An intelligent scheduling application for BDRs to book 1-hour podcast recording sessions with hosts using a round-robin system. The app provides a seamless interface to view and book available slots without revealing host details until after confirmation.",
+  "requestFramePermissions": []
+}
