@@ -28,13 +28,15 @@ const oauth2Client = new google.auth.OAuth2(
     REDIRECT_URI
 );
 
+// TODO: Build the Frontend and serve it as static files from here using express.static
+
 // --- In-Memory Data Store (for demonstration purposes) ---
 // In a production app, you MUST use a database (e.g., PostgreSQL, MongoDB) to persist this data.
 const hosts = [
-    { id: '1', name: 'Alice', email: 'alice@example.com', tokens: null },
-    { id: '2', name: 'Bob', email: 'bob@example.com', tokens: null },
-    { id: '3', name: 'Charlie', email: 'charlie@example.com', tokens: null },
-    { id: '4', name: 'Diana', email: 'diana@example.com', tokens: null },
+    { id: '1', name: 'Vignesh', email: 'vignesh@everstage.com', tokens: null },
+    { id: '2', name: 'Lokesh', email: 'lokeshwaran@lyric.tech', tokens: null },
+    // { id: '3', name: 'Charlie', email: 'charlie@example.com', tokens: null },
+    // { id: '4', name: 'Diana', email: 'diana@example.com', tokens: null },
 ];
 const bookings = []; // In-memory store for booked events
 let lastAssignedHostIndex = -1;
@@ -67,7 +69,7 @@ app.get('/auth/google/callback', async (req, res) => {
 
     try {
         const { tokens } = await oauth2Client.getToken(code);
-        
+
         // Find the host and save their tokens
         const host = hosts.find(h => h.id === hostId);
         if (host) {
@@ -115,7 +117,15 @@ app.get('/api/slots', async (req, res) => {
     const timeMax = new Date(`${date}T23:59:59.999Z`);
 
     try {
-        const calendar = google.calendar({ version: 'v3' });
+        const oauth2Client = new google.auth.OAuth2(
+            GCP_CLIENT_ID,
+            GCP_CLIENT_SECRET,
+            REDIRECT_URI
+        );
+        const anyConnectedHost = connectedHosts[0];
+        console.log("Any connected host :: ", anyConnectedHost)
+        oauth2Client.setCredentials({ access_token: anyConnectedHost.tokens.access_token, refresh_token: anyConnectedHost.tokens.refresh_token });
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
         const freeBusyResponse = await calendar.freebusy.query({
             requestBody: {
                 timeMin: timeMin.toISOString(),
@@ -123,7 +133,7 @@ app.get('/api/slots', async (req, res) => {
                 items: connectedHosts.map(h => ({ id: h.email })),
             },
         });
-        
+
         const busySlots = [];
         Object.values(freeBusyResponse.data.calendars).forEach(cal => {
             cal.busy.forEach(slot => {
@@ -139,7 +149,7 @@ app.get('/api/slots', async (req, res) => {
 
         const availableSlots = potentialSlots.filter(slotStart => {
             const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
-            
+
             // A slot is available if at least one host is free.
             const isAnyHostFree = connectedHosts.some(host => {
                 const hostBusyTimes = freeBusyResponse.data.calendars[host.email]?.busy || [];
@@ -164,7 +174,7 @@ app.get('/api/slots', async (req, res) => {
 // Book a new slot
 app.post('/api/book', async (req, res) => {
     const { startTime, guestName, guestEmail, topic } = req.body;
-    
+
     const eventStartTime = new Date(startTime);
     const eventEndTime = new Date(eventStartTime.getTime() + 60 * 60 * 1000);
 
@@ -204,7 +214,7 @@ app.post('/api/book', async (req, res) => {
     // Find the host among the free ones who has the fewest bookings for the day.
     const bookingDate = eventStartTime.toISOString().split('T')[0];
     const bookingsToday = bookings.filter(b => b.startTime.startsWith(bookingDate));
-    
+
     const hostBookingCounts = freeHosts.map(host => ({
         host,
         count: bookingsToday.filter(b => b.host.id === host.id).length,
@@ -214,7 +224,7 @@ app.post('/api/book', async (req, res) => {
     const leastBookedHosts = hostBookingCounts
         .filter(h => h.count === minBookings)
         .map(h => h.host);
-    
+
     // Step 3: Use the global round-robin index as a tie-breaker.
     let assignedHost = null;
     let searchIndex = (lastAssignedHostIndex + 1) % connectedHosts.length;
@@ -235,7 +245,7 @@ app.post('/api/book', async (req, res) => {
         assignedHost = leastBookedHosts[0];
         lastAssignedHostIndex = connectedHosts.findIndex(h => h.id === assignedHost.id);
     }
-    
+
     // Step 4: Create the calendar event for the assigned host.
     oauth2Client.setCredentials(assignedHost.tokens);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });

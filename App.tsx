@@ -11,10 +11,11 @@ import HostManager from './components/HostManager';
 
 const App: React.FC = () => {
   const [hosts, setHosts] = useState<Host[]>([
-    { id: '1', name: 'Alice', email: 'alice@example.com', connected: false },
-    { id: '2', name: 'Bob', email: 'bob@example.com', connected: false },
-    { id: '3', name: 'Charlie', email: 'charlie@example.com', connected: false },
-    { id: '4', name: 'Diana', email: 'diana@example.com', connected: false },
+    { id: '1', name: 'Vignesh', email: 'vignesh@everstage.com', connected: false },
+    { id: '2', name: 'Lokesh', email: 'lokeshwaran@lyric.tech', connected: false },
+    // { id: '2', name: 'Bob', email: 'bob@example.com', connected: false },
+    // { id: '3', name: 'Charlie', email: 'charlie@example.com', connected: false },
+    // { id: '4', name: 'Diana', email: 'diana@example.com', connected: false },
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());

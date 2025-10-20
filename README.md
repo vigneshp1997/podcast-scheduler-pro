@@ -18,3 +18,10 @@ View your app in AI Studio: https://ai.studio/apps/drive/1DdSO3ZA0OcrRSro9kOSDnj
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## TODO
+1. Get all the connected calendars
+2. Connect to DB to store all the access token and refresh tokens
+3. Seperate out UI
+4. Build the Frontend and serve it as static files from here using express.static
+
